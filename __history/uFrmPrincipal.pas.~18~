@@ -1,0 +1,99 @@
+unit uFrmPrincipal;
+
+interface
+
+uses
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
+  FMX.Advertising, FMX.Objects, FMX.StdCtrls, FMX.ScrollBox, FMX.Memo,
+  FMX.Controls.Presentation;
+
+type
+  TFrmPrincipal = class(TForm)
+    pnlFundo: TPanel;
+    pnlBotoes: TPanel;
+    btnFechar: TSpeedButton;
+    btnGerar: TSpeedButton;
+    pnlMemo: TPanel;
+    mmoEtl: TMemo;
+    lblEtl: TLabel;
+    linDiv5: TLine;
+    linDiv6: TLine;
+    PnlTextos: TPanel;
+    lblNomeCursor: TLabel;
+    lblColunasOriginal: TLabel;
+    lblTabelaOriginal: TLabel;
+    linDiv: TLine;
+    linDiv2: TLine;
+    linDiv3: TLine;
+    mmoCursor: TMemo;
+    mmoColunasOrigem: TMemo;
+    mmoTabelaOriginal: TMemo;
+    badAnuncio: TBannerAd;
+    lblTabelaDestino: TLabel;
+    mmoTabelaDestino: TMemo;
+    linDiv7: TLine;
+    lblColunasDestino: TLabel;
+    mmoColunasDestino: TMemo;
+    linDiv8: TLine;
+    procedure btnFecharClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure btnGerarClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmPrincipal: TFrmPrincipal;
+
+implementation
+
+{$R *.fmx}
+
+procedure TFrmPrincipal.btnFecharClick(Sender: TObject);
+begin
+  close;
+end;
+
+procedure TFrmPrincipal.btnGerarClick(Sender: TObject);
+begin
+  mmoEtl.Text := '';
+  mmoEtl.Lines.Add('CREATE OR REPLACE FUNCTION PROC_DIM_'+mmoCursor.Text+'() RETURNS VOID AS $$');
+  mmoEtl.Lines.Add('DECLARE V_LINHA record;');
+  mmoEtl.Lines.Add('');
+  mmoEtl.Lines.Add('DECLARE CUR_GET_'+mmoCursor.Text+' CURSOR FOR');
+  mmoEtl.Lines.Add('SELECT');
+  mmoEtl.Lines.Add(mmoColunasOrigem.Text);
+  mmoEtl.Lines.Add('FROM ' + edtTabelaOriginal.Text + ' ORIGEM');
+  mmoEtl.Lines.Add('WHERE NOT EXISTS (SELECT ' + edtColunasDestino.Text + ' FROM ' + edtTabelaDestino.Text + ');');
+  mmoEtl.Lines.Add('');
+  mmoEtl.Lines.Add('BEGIN');
+  mmoEtl.Lines.Add(' OPEN CUR_GET_'+edtNomeCursor.Text+'; ');
+  mmoEtl.Lines.Add(' LOOP');
+  mmoEtl.Lines.Add('    FETCH CUR_GET_'+edtNomeCursor.Text+' INTO V_LINHA; ');
+  mmoEtl.Lines.Add('    EXIT WHEN V_LINHA IS NULL;');
+  mmoEtl.Lines.Add('    RAISE NOTICE ''REGISTRO %'', V_LINHA;');
+  mmoEtl.Lines.Add('    INSERT INTO ' + edtTabelaDestino.Text);
+  mmoEtl.Lines.Add('   (' + edtColunasDestino.Text + ') VALUES (V_LINHA.' + StringReplace(edtColunasOrigem.Text, ', ', ', V_LINHA.', [rfIgnoreCase]) +');');
+  mmoEtl.Lines.Add(' END LOOP; ');
+  mmoEtl.Lines.Add(' CLOSE CUR_GET_'+edtNomeCursor.Text+'; ');
+  mmoEtl.Lines.Add('END;');
+  mmoEtl.Lines.Add('$$ LANGUAGE PLPGSQL;');
+end;
+
+procedure TFrmPrincipal.FormCreate(Sender: TObject);
+begin
+  badAnuncio.AdUnitID := 'ca-app-pub-1350446976118437/2184031436';
+  badAnuncio.TestMode := false;
+end;
+
+procedure TFrmPrincipal.FormShow(Sender: TObject);
+begin
+  mmoEtl.Text := '';
+  badAnuncio.LoadAd;
+end;
+
+end.
